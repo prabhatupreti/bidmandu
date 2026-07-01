@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" fill="none">
+  <rect width="300" height="200" rx="16" fill="#F8F9FA" stroke="#C41E3A" strokeWidth="2" strokeDasharray="8 4" />
+  <path d="M120 80h60l-30-30-30 30z" fill="#C41E3A" fillOpacity="0.2" />
+  <circle cx="150" cy="100" r="15" fill="#C41E3A" fillOpacity="0.5" />
+  <text x="150" y="145" textAnchor="middle" fill="#2A2A2A" fontSize="14" fontWeight="bold">No Active Auctions</text>
+  <text x="150" y="165" textAnchor="middle" fill="#6B7280" fontSize="11">Start bidding or list an item</text>
+</svg>

@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #F8F9FA;
+  color: #2A2A2A;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Pulse glow for live bid */
+@keyframes softPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(196, 30, 58, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(196, 30, 58, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(196, 30, 58, 0);
+  }
+}
+
+.pulse-glow {
+  animation: softPulse 2s infinite;
+}
+
+/* Number rolling effect (simple scale) */
+@keyframes numberPop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.number-roll {
+  animation: numberPop 0.3s ease-out;
+}
+
+/* Crimson flash for countdown under 5 min */
+@keyframes crimsonFlash {
+
+  0%,
+  100% {
+    color: #ffffff;
+    background-color: #2A2A2A;
+  }
+
+  50% {
+    color: #ffffff;
+    background-color: #C41E3A;
+  }
+}
+
+.countdown-urgent {
+  animation: crimsonFlash 1s infinite;
+}
+
+/* Fade-up staggered entry */
+.fade-up {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dropzone.active {
+  border-color: #FDC02F;
+  background-color: rgba(253, 192, 47, 0.05);
+  transform: scale(0.98);
+}
+
+/* Floating label */
+.floating-label {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.floating-label input,
+.floating-label textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  background: transparent;
+}
+
+.floating-label input:focus,
+.floating-label textarea:focus {
+  outline: none;
+  border-color: #C41E3A;
+  box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+}
+
+.floating-label label {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-size: 1rem;
+  color: #888;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 0 4px;
+}
+
+.floating-label input:focus+label,
+.floating-label input:not(:placeholder-shown)+label,
+.floating-label textarea:focus+label,
+.floating-label textarea:not(:placeholder-shown)+label {
+  top: -10px;
+  left: 12px;
+  font-size: 0.75rem;
+  color: #C41E3A;
+  background: white;
+  border-radius: 4px;
+}

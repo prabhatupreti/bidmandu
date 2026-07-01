@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/logobid.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bidmandu</title>
+  <!-- Tailwind via CDN with custom theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#C41E3A',
+              yellow: '#FDC02F',
+              dark: '#2A2A2A',
+              light: '#F5F5F5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
