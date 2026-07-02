@@ -264,6 +264,7 @@ class _ProductFormState extends State<ProductForm> {
       for (int i = 0; i < _images.length && i < 5; i++) { filesMap['images'] = _images[i].path; }
       final res = await ApiService.multipartPost('/products', fields, filesMap);
       if (res.statusCode == 201 || res.statusCode == 200) {
+        // Fixed: use bytesToString() as in the original real HTTP implementation
         final body = await res.stream.bytesToString();
         final data = jsonDecode(body);
         await ApiService.patch('/products/${data['id']}/submit');
@@ -284,7 +285,6 @@ class _ProductFormState extends State<ProductForm> {
           const SizedBox(height: 18),
           _buildThemeTextField(label: "Description", ctrl: _desc, placeholder: "Provide comprehensive item conditions", maxLines: 4),
           const SizedBox(height: 18),
-          // FIXED: Symmetrical horizontal pair
           Row(
             children: [
               Expanded(flex: 1, child: _buildTactileDropdownSelector(label: "Category", activeValue: _category, items: _cats, onSelect: (v) => setState(() => _category = v))),
@@ -295,7 +295,6 @@ class _ProductFormState extends State<ProductForm> {
           const SizedBox(height: 18),
           _buildThemeTextField(label: "Starting Price (Rs.)", ctrl: _price, placeholder: "e.g., 25000", keyboardType: TextInputType.number),
           const SizedBox(height: 24),
-          // Image dropzone
           const Text("Product Images (up to 5)", style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           GestureDetector(

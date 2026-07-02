@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  static const String baseUrl = 'http://10.0.2.2:3000'; // Android emulator → localhost
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -21,15 +21,18 @@ class ApiService {
 
   static Future<http.Response> post(String path, {Map<String, dynamic>? body}) async {
     final headers = await _getHeaders();
-    return http.post(Uri.parse('$baseUrl$path'), headers: headers, body: body != null ? jsonEncode(body) : null);
+    return http.post(Uri.parse('$baseUrl$path'),
+        headers: headers, body: body != null ? jsonEncode(body) : null);
   }
 
   static Future<http.Response> patch(String path, {Map<String, dynamic>? body}) async {
     final headers = await _getHeaders();
-    return http.patch(Uri.parse('$baseUrl$path'), headers: headers, body: body != null ? jsonEncode(body) : null);
+    return http.patch(Uri.parse('$baseUrl$path'),
+        headers: headers, body: body != null ? jsonEncode(body) : null);
   }
 
-  static Future<http.StreamedResponse> multipartPost(String path, Map<String, String> fields, Map<String, String> files) async {
+  static Future<http.StreamedResponse> multipartPost(
+      String path, Map<String, String> fields, Map<String, String> files) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
     final request = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
