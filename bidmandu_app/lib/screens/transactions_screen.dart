@@ -32,7 +32,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     try {
       final res = await ApiService.get('/transactions/my');
       if (res.statusCode == 200) {
-        setState(() => transactions = jsonDecode(res.body));
+        setState(() => transactions = res.data);   // Dio auto-parses
       }
     } catch (_) {}
     setState(() => loading = false);

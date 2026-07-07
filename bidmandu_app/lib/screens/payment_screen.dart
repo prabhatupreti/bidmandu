@@ -27,7 +27,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final res =
           await ApiService.get('/transactions/${widget.txnId}/payment-details');
       if (res.statusCode == 200) {
-        setState(() => details = jsonDecode(res.body));
+        setState(() => details = res.data);   // Dio auto-parses
       }
     } catch (_) {}
     setState(() => loading = false);
@@ -89,7 +89,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Payment breakdown summary
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),

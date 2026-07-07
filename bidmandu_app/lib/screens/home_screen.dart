@@ -28,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool isSeller = false;
   String? userId;
 
-  // Filter state
   double priceMin = 0;
   double priceMax = 500000;
   bool activeOnly = false;
@@ -43,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   late AnimationController _staggerController;
   late Animation<double> _fadeAnimation;
+  final ScrollController _scrollController = ScrollController();
+  double _headerOpacity = 0.0;
 
   @override
   void initState() {
@@ -53,10 +54,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _staggerController.forward();
     _loadUser();
     fetchAuctions();
+    _scrollController.addListener(() {
+      double offset = _scrollController.offset;
+      double opacity = (offset / 80).clamp(0.0, 1.0);
+      if (opacity != _headerOpacity) {
+        setState(() => _headerOpacity = opacity);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _staggerController.dispose();
     super.dispose();
   }
@@ -81,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() => loading = true);
     try {
       final res = await ApiService.get('/auctions/list');
-      if (res.statusCode == 200) setState(() => auctions = jsonDecode(res.body));
+      if (res.statusCode == 200) setState(() => auctions = res.data);   // ← FIXED
     } catch (_) {}
     setState(() => loading = false);
   }
@@ -149,12 +158,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     setState(() { isLoggedIn = false; isSeller = false; userId = null; });
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   void _hapticTap() => HapticFeedback.lightImpact();
 
-  // Build dynamic nav items based on auth & seller state
   List<Map<String, dynamic>> get _navItems {
     if (isSeller) {
       return [
@@ -172,8 +179,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } else {
       return [
         {'icon': Icons.gavel_rounded, 'label': 'Bids', 'route': null},
-        {'icon': Icons.add_box_outlined, 'label': 'Start Selling', 'route': '/sell'},
-        {'icon': Icons.receipt_long_outlined, 'label': 'Transactions', 'route': '/transactions'},
+        {'icon': Icons.add_box_outlined, 'label': 'Start Selling', 'route': '/login'},
+        {'icon': Icons.receipt_long_outlined, 'label': 'Transactions', 'route': '/login'},
         {'icon': Icons.login_rounded, 'label': 'Login / Join', 'route': '/login'},
       ];
     }
@@ -183,11 +190,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _hapticTap();
     final item = _navItems[index];
     if (item['label'] == 'Bids') {
-      // Stay on home page – do nothing
+      setState(() => _currentNavIndex = 0);
     } else if (item['route'] != null) {
       Navigator.pushNamed(context, item['route'] as String);
     }
-    setState(() => _currentNavIndex = index);
   }
 
   void _showFilterSheet() {
@@ -387,18 +393,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           SafeArea(
             child: CustomScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverAppBar(
-                  backgroundColor: const Color(0xFF121214).withOpacity(0.8),
-                  floating: true, pinned: false, automaticallyImplyLeading: false,
+                  backgroundColor: const Color(0xFF2A2A2A).withOpacity(_headerOpacity),
+                  pinned: true,
+                  floating: false,
+                  automaticallyImplyLeading: false,
+                  elevation: 0,
+                  scrolledUnderElevation: 1,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('BIDMANDU', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22, letterSpacing: 1.2, color: Colors.white)),
                       Row(
                         children: [
-                          // Role chip (Buyer / Buyer & Seller)
+                          Image.asset('assets/logobid.png', height: 40),
+                          const SizedBox(width: 8),
+                          RichText(
+                            text: const TextSpan(
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                              children: [
+                                TextSpan(text: 'BID', style: TextStyle(color: Color(0xFFC41E3A))),
+                                TextSpan(text: 'MANDU', style: TextStyle(color: Color(0xFFFDC02F))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
@@ -431,10 +455,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           if (isLoggedIn) ...[
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () {
-                                _hapticTap();
-                                logout();
-                              },
+                              onTap: () { _hapticTap(); logout(); },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(

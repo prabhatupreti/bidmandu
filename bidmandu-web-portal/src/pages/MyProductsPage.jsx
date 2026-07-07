@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 
+// ---------- Helper: Countdown ----------
 function calculateTimeLeft(end) {
   const diff = new Date(end).getTime() - Date.now();
   if (diff <= 0) return { total: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -35,6 +36,7 @@ function Countdown({ endTime, compact }) {
   );
 }
 
+// ---------- Accept Bid Modal ----------
 function AcceptModal({ bid, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -59,15 +61,24 @@ function AcceptModal({ bid, onConfirm, onClose }) {
   );
 }
 
+// ---------- Single Product Card with detailed info ----------
 function ProductCard({ item }) {
   const [expanded, setExpanded] = useState(false);
   const [modalBid, setModalBid] = useState(null);
   const [closed, setClosed] = useState(item.auction.status !== 'ACTIVE');
   const [localStatus, setLocalStatus] = useState(item.auction.status);
 
+  const product = item.product;
+  const auction = item.auction;
+  const bids = item.bids || [];
+  const totalBids = item.totalBids || bids.length;
+  const startPrice = product.starting_price;
+  const currentPrice = auction.current_price;
+  const hasBids = totalBids > 0;
+
   const handleAccept = async (bid) => {
     try {
-      await api.post(`/auctions/${item.auction.id}/accept-bid`, { bidId: bid.id });
+      await api.post(`/auctions/${auction.id}/accept-bid`, { bidId: bid.id });
       setLocalStatus('COMPLETED');
       setClosed(true);
       setModalBid(null);
@@ -85,8 +96,8 @@ function ProductCard({ item }) {
       <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-            {item.product.image_urls?.[0] ? (
-              <img src={item.product.image_urls[0]} alt="" className="h-full w-full object-cover" />
+            {product.image_urls?.[0] ? (
+              <img src={product.image_urls[0]} alt="" className="h-full w-full object-cover" />
             ) : (
               <svg width="30" height="30" viewBox="0 0 60 60" fill="none">
                 <rect width="60" height="60" rx="8" fill="#C41E3A" fillOpacity="0.05" />
@@ -95,20 +106,25 @@ function ProductCard({ item }) {
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-[#2A2A2A]">{item.product.title}</h3>
-            <p className="text-xs text-gray-500">{item.totalBids} bids placed</p>
+            <h3 className="font-semibold text-[#2A2A2A]">{product.title}</h3>
+            <p className="text-xs text-gray-500">
+              Starting: NRs. {startPrice?.toLocaleString()} &nbsp;|&nbsp; Current: NRs. {currentPrice?.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500">
+              {totalBids} {totalBids === 1 ? 'bid' : 'bids'} &nbsp;|&nbsp; {product.category} &nbsp;|&nbsp; {product.condition}
+            </p>
             <div className="flex items-center gap-2 mt-1">
               {closed ? (
                 <span className="bg-[#FDC02F] text-[#2A2A2A] px-2 py-0.5 rounded-full text-xs font-bold">SOLD</span>
               ) : (
-                <Countdown endTime={item.auction.end_time} compact />
+                <Countdown endTime={auction.end_time} compact />
               )}
             </div>
           </div>
         </div>
         <div className="text-right">
           <span className="text-sm text-gray-500">Current Bid</span>
-          <p className="text-2xl font-bold text-[#FDC02F]">NRs. {item.auction.current_price.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-[#FDC02F]">NRs. {currentPrice?.toLocaleString()}</p>
         </div>
       </div>
 
@@ -123,7 +139,7 @@ function ProductCard({ item }) {
               </tr>
             </thead>
             <tbody>
-              {item.bids.map((bid, idx) => (
+              {bids.map((bid, idx) => (
                 <tr key={bid.id} className="border-b border-gray-100" style={{ animationDelay: `${idx * 0.04}s` }}>
                   <td className="py-2">
                     <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
@@ -169,6 +185,7 @@ function ProductCard({ item }) {
   );
 }
 
+// ---------- Empty State ----------
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20">
@@ -182,6 +199,7 @@ function EmptyState() {
   );
 }
 
+// ---------- Main Page ----------
 export default function MyProductsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

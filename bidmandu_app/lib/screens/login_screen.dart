@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
@@ -26,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
         'password': password,
       });
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = res.data;                     // Dio auto-parses
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['access_token']);
         Navigator.pushReplacementNamed(context, '/home');

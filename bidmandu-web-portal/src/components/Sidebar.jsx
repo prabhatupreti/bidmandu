@@ -1,11 +1,11 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Home, ShoppingBag, PlusCircle, Package, Receipt, LogIn, UserPlus, Search, LogOut,
+  Home, ShoppingBag, PlusCircle, Package, Receipt, LogIn, UserPlus, LogOut,
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ onClose, isMobile = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,69 +14,111 @@ export default function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    if (onClose) onClose();
   };
 
-  const linkClass = (path) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-      location.pathname === path ? 'bg-[#C41E3A] text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'
-    }`;
+  const handleNav = (path) => {
+    navigate(path);
+    if (onClose) onClose();
+  };
+
+  // Modern link styles – full width, consistent padding, rounded corners
+  const activeClass =
+    'flex items-center gap-4 px-4 py-3 mx-3 my-1 rounded-xl font-medium transition-all duration-200 bg-[#C41E3A] text-white shadow-sm';
+  const inactiveClass =
+    'flex items-center gap-4 px-4 py-3 mx-3 my-1 rounded-xl font-medium transition-all duration-200 text-gray-300 hover:bg-white/10 hover:text-white';
 
   return (
     <aside className="w-64 shrink-0 bg-[#2A2A2A] h-full flex flex-col justify-between text-white overflow-y-auto">
       {/* Top zone */}
       <div>
         {/* Branding */}
-        <Link to="/" className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
+        <Link
+          to="/"
+          className="flex items-center gap-3 px-4 py-5 border-b border-white/10"
+          onClick={() => { if (onClose) onClose(); }}
+        >
           <img src="/logobid.png" alt="Bidmandu" className="h-10 w-10" />
           <span className="text-xl font-bold tracking-tight">BIDMANDU</span>
         </Link>
 
         {/* Navigation links */}
-        <nav className="px-3 py-4 space-y-1">
-          <Link to="/" className={linkClass('/')}>
+        <nav className="px-1 py-4">
+          <button
+            onClick={() => handleNav('/')}
+            className={location.pathname === '/' ? activeClass : inactiveClass}
+          >
             <Home size={20} />
             <span>Home</span>
-          </Link>
+          </button>
 
           {user && (
             <>
-              <Link to="/sell" className={linkClass('/sell')}>
+              <button
+                onClick={() => handleNav('/sell')}
+                className={location.pathname === '/sell' ? activeClass : inactiveClass}
+              >
                 <PlusCircle size={20} />
                 <span>{isKycVerified ? 'List an Item' : 'Start Selling'}</span>
-              </Link>
+              </button>
               {isKycVerified && (
-                <Link to="/dashboard/my-products" className={linkClass('/dashboard/my-products')}>
+                <button
+                  onClick={() => handleNav('/dashboard/my-products')}
+                  className={
+                    location.pathname === '/dashboard/my-products'
+                      ? activeClass
+                      : inactiveClass
+                  }
+                >
                   <Package size={20} />
                   <span>My Products</span>
-                </Link>
+                </button>
               )}
-              <Link to="/transactions" className={linkClass('/transactions')}>
+              <button
+                onClick={() => handleNav('/transactions')}
+                className={
+                  location.pathname === '/transactions' ? activeClass : inactiveClass
+                }
+              >
                 <Receipt size={20} />
                 <span>Purchases</span>
-              </Link>
+              </button>
             </>
           )}
         </nav>
       </div>
 
       {/* Bottom zone */}
-      <div className="px-3 py-4 border-t border-white/10">
+      <div className="px-1 py-4 border-t border-white/10">
         {user ? (
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-4 w-full px-4 py-3 mx-3 my-1 rounded-xl font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200"
+          >
             <LogOut size={20} />
             <span>Logout</span>
           </button>
         ) : (
-          <div className="space-y-1">
-            <Link to="/login" className={linkClass('/login')}>
+          <>
+            <button
+              onClick={() => handleNav('/login')}
+              className={
+                location.pathname === '/login' ? activeClass : inactiveClass
+              }
+            >
               <LogIn size={20} />
               <span>Login</span>
-            </Link>
-            <Link to="/register" className={linkClass('/register')}>
+            </button>
+            <button
+              onClick={() => handleNav('/register')}
+              className={
+                location.pathname === '/register' ? activeClass : inactiveClass
+              }
+            >
               <UserPlus size={20} />
               <span>Register</span>
-            </Link>
-          </div>
+            </button>
+          </>
         )}
       </div>
     </aside>

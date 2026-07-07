@@ -34,7 +34,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     try {
       final res = await ApiService.get('/products/my');
       if (res.statusCode == 200) {
-        setState(() => products = jsonDecode(res.body));
+        setState(() => products = res.data);   // Dio auto-parses
       }
     } catch (_) {}
     setState(() => loading = false);
@@ -69,6 +69,10 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                     final bids = (item['bids'] as List<dynamic>?) ?? [];
                     final ended = auction['status'] != 'ACTIVE';
                     final auctionId = auction['id']?.toString() ?? '';
+                    final startPrice = _parse(product['starting_price']);
+                    final currentPrice = _parse(auction['current_price']);
+                    final totalBids = item['totalBids'] ?? bids.length;
+
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: ExpansionTile(
@@ -91,9 +95,19 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                         title: Text(product['title'] ?? 'No title',
                             style: const TextStyle(
                                 color: Colors.white, fontWeight: FontWeight.bold)),
-                        subtitle: Text(
-                            '${bids.length} bids · NRs. ${NumberFormat('#,##0').format(_parse(auction['current_price']))}',
-                            style: TextStyle(color: Colors.grey[400])),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Starting: NRs. ${NumberFormat('#,##0').format(startPrice)}  •  Current: NRs. ${NumberFormat('#,##0').format(currentPrice)}',
+                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                            ),
+                            Text(
+                              '${totalBids} ${totalBids == 1 ? 'bid' : 'bids'}  •  ${product['category'] ?? 'N/A'}  •  ${product['condition'] ?? 'N/A'}',
+                              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                            ),
+                          ],
+                        ),
                         trailing: ended
                             ? Chip(
                                 label: const Text('SOLD', style: TextStyle(color: Colors.black)),

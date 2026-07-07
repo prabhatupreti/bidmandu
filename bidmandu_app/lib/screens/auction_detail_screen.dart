@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
@@ -20,6 +20,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   Map<String, dynamic>? product;
   int totalBids = 0;
   bool loading = true;
+  bool _isLoggedIn = false;
   final _bidCtrl = TextEditingController();
   Timer? _countdownTimer;
   Duration _timeLeft = Duration.zero;
@@ -33,7 +34,14 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     _pulseController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 800))
       ..repeat(reverse: true);
+    _checkLogin();
     fetchDetails();
+  }
+
+  Future<void> _checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    setState(() => _isLoggedIn = token != null);
   }
 
   @override
@@ -51,7 +59,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     try {
       final res = await ApiService.get('/auctions/list');
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = res.data;                     // Dio auto-parses
         final match = data.firstWhere((a) => a['id'] == widget.auctionId,
             orElse: () => null);
         if (match != null) {
@@ -81,6 +89,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   }
 
   Future<void> placeBid() async {
+    if (!_isLoggedIn) {
+      Navigator.pushNamed(context, '/login');
+      return;
+    }
     final amountText = _bidCtrl.text.trim();
     if (amountText.isEmpty) return;
     final amount = double.tryParse(amountText);
@@ -113,12 +125,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       ? _parse(auction!['current_price'])
       : _parse(product?['starting_price']);
 
-  // ---------------- Centered Dual‑Card Price Row ----------------
   Widget _buildCenteredPriceRow() {
     final startPrice = _parse(product?['starting_price']);
     return Row(
       children: [
-        // Left: Starting Price
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -148,7 +158,6 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           ),
         ),
         const SizedBox(width: 12),
-        // Right: Current Bid
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -188,8 +197,6 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       ],
     );
   }
-
-  // ---------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -294,10 +301,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Replaced the old single price card with the centered dual‑card
                   _buildCenteredPriceRow(),
                   const SizedBox(height: 24),
-                  // Countdown
                   if (!isEnded) ...[
                     Text('Time Remaining',
                         style: TextStyle(color: Colors.grey[500])),
@@ -371,50 +376,69 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                     ),
                   ],
                   const SizedBox(height: 24),
-                  // Bidding input
                   if (!isEnded) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _bidCtrl,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Enter higher amount',
-                              hintStyle:
-                                  TextStyle(color: Colors.grey[500]),
-                              filled: true,
-                              fillColor: const Color(0xFF242424),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
+                    if (_isLoggedIn) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _bidCtrl,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: 'Enter higher amount',
+                                hintStyle: TextStyle(color: Colors.grey[500]),
+                                filled: true,
+                                fillColor: const Color(0xFF242424),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none),
+                              ),
+                              onChanged: (_) => setState(() => bidError = null),
                             ),
-                            onChanged: (_) => setState(() => bidError = null),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: placeBid,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFC41E3A),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16))),
-                          child: const Text('Bid Now',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    if (bidError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(bidError!,
-                            style: const TextStyle(
-                                color: Colors.red, fontSize: 13)),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: placeBid,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC41E3A),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16))),
+                            child: const Text('Bid Now',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
+                      if (bidError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(bidError!,
+                              style: const TextStyle(
+                                  color: Colors.red, fontSize: 13)),
+                        ),
+                    ] else ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/login');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFDC02F),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Login to Bid',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                    ],
                   ],
                   const SizedBox(height: 24),
                   Text('Description',
